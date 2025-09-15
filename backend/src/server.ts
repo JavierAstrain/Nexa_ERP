@@ -2,14 +2,15 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import path from 'path';
+import fs from 'fs';
+
 import { authRouter } from './modules/auth/auth.routes';
 import { userRouter } from './modules/users/user.routes';
 import { modulesRouter } from './modules/modules.routes';
 import { crmRouter } from './modules/crm/crm.routes';
 import { inventoryRouter } from './modules/inventory/inventory.routes';
 import { accountingRouter } from './modules/accounting/accounting.routes';
-import * as path from 'path';
-import * as fs from 'fs';
 
 export const allowedOrigin = process.env.CORS_ORIGIN || '*';
 
@@ -28,25 +29,15 @@ app.use('/crm', crmRouter);
 app.use('/inventory', inventoryRouter);
 app.use('/accounting', accountingRouter);
 
-// ==== FRONTEND STATIC (SPA) ====
-const candidates = [
-  // rutas donde realmente cae el build del FRONTEND
-  path.resolve(__dirname, '../../frontend/dist'),
-  path.resolve(__dirname, '../../frontend/build'),
-  path.resolve(__dirname, '../../../frontend/dist'),
-  path.resolve(__dirname, '../../../frontend/build'),
-  path.resolve(process.cwd(), '../frontend/dist'),
-  path.resolve(process.cwd(), '../frontend/build'),
-  path.resolve(process.cwd(), 'frontend/dist'),
-  path.resolve(process.cwd(), 'frontend/build'),
-];
-
-const staticRoot = candidates.find((p) => fs.existsSync(p)) ?? candidates[0];
+// === FRONTEND ===
+// Servimos SIEMPRE desde backend/public (copiado en build)
+const staticRoot = path.resolve(__dirname, '../public');
 console.log('[NEXA] Serving frontend from:', staticRoot, 'exists:', fs.existsSync(staticRoot));
 
 app.use(express.static(staticRoot, { index: 'index.html' }));
 
 app.get('*', (req, res) => {
+  // rutas de API => 404 json
   if (
     req.path.startsWith('/auth') ||
     req.path.startsWith('/users') ||
