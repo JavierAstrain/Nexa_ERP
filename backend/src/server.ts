@@ -30,14 +30,15 @@ app.use('/accounting', accountingRouter);
 
 // ==== FRONTEND STATIC (SPA) ====
 const candidates = [
+  // rutas donde realmente cae el build del FRONTEND
   path.resolve(__dirname, '../../frontend/dist'),
   path.resolve(__dirname, '../../frontend/build'),
   path.resolve(__dirname, '../../../frontend/dist'),
   path.resolve(__dirname, '../../../frontend/build'),
+  path.resolve(process.cwd(), '../frontend/dist'),
+  path.resolve(process.cwd(), '../frontend/build'),
   path.resolve(process.cwd(), 'frontend/dist'),
   path.resolve(process.cwd(), 'frontend/build'),
-  path.resolve(process.cwd(), 'dist'),
-  path.resolve(process.cwd(), 'build'),
 ];
 
 const staticRoot = candidates.find((p) => fs.existsSync(p)) ?? candidates[0];
