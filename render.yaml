@@ -1,37 +1,52 @@
+databases:
+  - name: nexa-erp-db
+    plan: free
+    databaseName: nexa_erp_db
+    user: nexa_erp_user
+
 services:
   - type: web
     name: nexa-erp
     env: node
     plan: free
-    buildCommand: |
-      cd frontend
-      pnpm i --frozen-lockfile=false || npm i
-      pnpm build || npm run build
-      cd ../backend
-      pnpm i --frozen-lockfile=false || npm i
-      pnpm prisma:generate || npx prisma generate
-      pnpm build || npm run build
-    startCommand: |
-      # arrancamos desde la raíz del repo
-      if [ ! -d "./frontend/dist" ] && [ -d "./frontend" ]; then
-        echo "Frontend dist not found. Building at runtime..."
-        cd frontend
-        pnpm i --frozen-lockfile=false || npm i
-        pnpm build || npm run build
-        cd ..
-      fi
-      cd backend
-      pnpm prisma:generate || npx prisma generate
-      pnpm db:push || npx prisma db push
-      node dist/index.js
+    autoDeploy: true
     envVars:
       - key: DATABASE_URL
         fromDatabase:
           name: nexa-erp-db
           property: connectionString
-      - key: JWT_SECRET
-        generateValue: true
-
-databases:
-  - name: nexa-erp-db
-    plan: free
+      - key: PORT
+        value: 10000
+      - key: CORS_ORIGIN
+        value: "*"
+    buildCommand: |
+      set -e
+      # --- FRONTEND ---
+      cd frontend
+      pnpm i --frozen-lockfile=false || npm i
+      pnpm build || npm run build
+      cd ..
+      # Copiamos artefactos del front a una ruta fija en el backend
+      rm -rf backend/public && mkdir -p backend/public
+      cp -r frontend/dist/* backend/public/
+      # --- BACKEND ---
+      cd backend
+      pnpm i --frozen-lockfile=false || npm i
+      pnpm prisma:generate || npx prisma generate
+      pnpm build || npm run build
+    startCommand: |
+      set -e
+      # Garantizamos que el front exista en runtime
+      if [ ! -d "./backend/public" ] || [ -z "$(ls -A ./backend/public 2>/dev/null)" ]; then
+        echo "Rebuilding frontend at runtime..."
+        cd frontend
+        pnpm i --frozen-lockfile=false || npm i
+        pnpm build || npm run build
+        cd ..
+        rm -rf backend/public && mkdir -p backend/public
+        cp -r frontend/dist/* backend/public/
+      fi
+      cd backend
+      pnpm prisma:generate || npx prisma generate
+      pnpm db:push || npx prisma db push
+      node dist/index.js
