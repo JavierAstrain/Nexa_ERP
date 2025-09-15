@@ -1,96 +1,49 @@
 import React, { useEffect, useState } from "react";
-import { useApi } from "../../lib/api";
-
-type InvoiceItem = {
-  id: string;
-  productId?: string;
-  description?: string;
-  quantity: number;
-  price: number;
-  total?: number;
-};
+import { useAuth } from "../../context/AuthContext";
 
 type Invoice = {
   id: string;
   number: string;
-  customerId?: string;
-  status?: string;
-  total: number;
-  items?: InvoiceItem[];
-  createdAt?: string;
+  total?: number;
 };
 
 export default function Invoices() {
-  const api = useApi();
+  const { api } = useAuth();
   const [rows, setRows] = useState<Invoice[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    let mounted = true;
     (async () => {
+      setLoading(true);
       try {
-        const { data } = await api.get("/accounting/invoices");
-        const list: Invoice[] = Array.isArray(data?.items)
-          ? data.items
-          : Array.isArray(data)
-          ? data
-          : [];
-        setRows(list);
+        // ajusta el endpoint si tu API usa otro prefijo
+        const { data } = await api.get("/invoices");
+        if (mounted) setRows(Array.isArray(data) ? data : []);
       } catch {
-        setRows([]);
+        if (mounted) setRows([]);
       } finally {
         setLoading(false);
       }
     })();
+    return () => {
+      mounted = false;
+    };
   }, [api]);
 
-  if (loading) return <div style={{ padding: 24 }}>Cargando facturas…</div>;
-
   return (
-    <div style={{ padding: 24 }}>
-      <h2 style={{ marginBottom: 12 }}>Facturas</h2>
-      <table style={{ width: "100%", borderCollapse: "collapse" }}>
-        <thead>
-          <tr>
-            <th style={th}>Nro</th>
-            <th style={th}>Estado</th>
-            <th style={{ ...th, textAlign: "right" }}>Total</th>
-            <th style={th}>Fecha</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((inv) => (
-            <tr key={inv.id}>
-              <td style={td}>{inv.number}</td>
-              <td style={td}>{inv.status ?? "-"}</td>
-              <td style={{ ...td, textAlign: "right" }}>
-                {typeof inv.total === "number" ? inv.total.toFixed(2) : inv.total}
-              </td>
-              <td style={td}>
-                {inv.createdAt ? new Date(inv.createdAt).toLocaleString() : "-"}
-              </td>
-            </tr>
-          ))}
-          {rows.length === 0 && (
-            <tr>
-              <td style={td} colSpan={4}>
-                Sin registros
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+    <div>
+      <h1 className="text-xl font-semibold mb-4">Facturas</h1>
+      {loading && <div>Cargando…</div>}
+      {!loading && rows.length === 0 && <div>No hay facturas</div>}
+      <ul className="space-y-2">
+        {rows.map((f) => (
+          <li key={f.id} className="p-3 rounded border">
+            <div className="font-medium">#{f.number}</div>
+            <div className="text-sm text-gray-600">Total: {f.total ?? 0}</div>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
-
-const th: React.CSSProperties = {
-  textAlign: "left",
-  fontWeight: 600,
-  borderBottom: "1px solid #eee",
-  padding: 8,
-};
-
-const td: React.CSSProperties = {
-  borderBottom: "1px solid #f3f3f3",
-  padding: 8,
-};
