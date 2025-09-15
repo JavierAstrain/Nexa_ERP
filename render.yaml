@@ -13,7 +13,8 @@ services:
       pnpm build || npm run build
     startCommand: |
       cd backend
-      pnpm migrate:deploy || npm run migrate:deploy
+      pnpm prisma:generate || npx prisma generate
+      pnpm db:push || npx prisma db push
       node dist/index.js
     envVars:
       - key: DATABASE_URL
