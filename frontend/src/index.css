@@ -2,12 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --bg: #0b1220;
-  --card: #0f1730;
-}
-
-body { background: radial-gradient(1000px 600px at 200px 200px, rgba(46,153,255,0.25), transparent) , var(--bg); }
-.card { background: var(--card); border: 1px solid rgba(255,255,255,.06); box-shadow: 0 0 30px rgba(46,153,255,0.08); }
-.btn { @apply px-3 py-2 rounded-xl bg-nexa-600 hover:bg-nexa-500 transition; }
-.input { @apply bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 w-full; }
+/* estilos base opcionales */
+:root { color-scheme: light; }
+html, body, #root { height: 100%; }
