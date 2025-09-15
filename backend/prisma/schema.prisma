@@ -121,3 +121,11 @@ model InvoiceItem {
   quantity  Int
   price     Decimal  @db.Decimal(12, 2)
 }
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  CANCELLED
+}
+
