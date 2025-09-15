@@ -1,63 +1,58 @@
-import React, { useEffect, useState } from 'react'
-import Layout from '../../components/Layout'
-import { useAuth } from '../../lib/api'
+import React, { useEffect, useState } from "react";
+import { useApi } from "../../lib/api";
 
-type Product = { id:string, sku:string, name:string, price:number }
+type Product = {
+  id: string;
+  name: string;
+  price: number;
+  stock?: number;
+};
 
-const Products: React.FC = () => {
-  const { api } = useAuth()
-  const [list, setList] = useState<Product[]>([])
-  const [form, setForm] = useState<Partial<Product>>({})
+export default function Products() {
+  const api = useApi();
+  const [items, setItems] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const load = async ()=>{
-    const { data } = await api.get('/inventory/products')
-    setList(data)
-  }
-  useEffect(()=>{ load() }, [])
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data } = await api.get("/inventory/products");
+        // admitir distintos formatos de respuesta
+        const list: Product[] = Array.isArray(data?.items) ? data.items : Array.isArray(data) ? data : [];
+        setItems(list);
+      } catch {
+        setItems([]);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [api]);
 
-  const save = async (e: React.FormEvent)=>{
-    e.preventDefault()
-    await api.post('/inventory/products', { ...form, price: Number(form.price || 0) })
-    setForm({})
-    load()
-  }
+  if (loading) return <div style={{ padding: 24 }}>Cargando productos…</div>;
 
   return (
-    <Layout>
-      <h2 className="text-xl font-semibold mb-4">Productos</h2>
-      <div className="grid md:grid-cols-2 gap-6">
-        <div className="card rounded-xl overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-white/5">
-              <tr>
-                <th className="text-left p-3">SKU</th>
-                <th className="text-left p-3">Nombre</th>
-                <th className="text-left p-3">Precio</th>
-              </tr>
-            </thead>
-            <tbody>
-              {list.map(p=> (
-                <tr key={p.id} className="border-t border-white/5">
-                  <td className="p-3">{p.sku}</td>
-                  <td className="p-3">{p.name}</td>
-                  <td className="p-3">${p.price}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <div className="card p-4 rounded-xl">
-          <h3 className="font-semibold mb-2">Nuevo producto</h3>
-          <form className="space-y-2" onSubmit={save}>
-            <input className="input" placeholder="SKU" value={form.sku||''} onChange={e=>setForm({...form, sku:e.target.value})}/>
-            <input className="input" placeholder="Nombre" value={form.name||''} onChange={e=>setForm({...form, name:e.target.value})}/>
-            <input className="input" placeholder="Precio" value={form.price as any || ''} onChange={e=>setForm({...form, price:e.target.value as any})}/>
-            <button className="btn w-full" type="submit">Guardar</button>
-          </form>
-        </div>
-      </div>
-    </Layout>
-  )
+    <div style={{ padding: 24 }}>
+      <h2>Productos</h2>
+      <table style={{ width: "100%", borderCollapse: "collapse" }}>
+        <thead>
+          <tr>
+            <th style={{ textAlign: "left", borderBottom: "1px solid #eee", padding: 8 }}>Nombre</th>
+            <th style={{ textAlign: "right", borderBottom: "1px solid #eee", padding: 8 }}>Precio</th>
+            <th style={{ textAlign: "right", borderBottom: "1px solid #eee", padding: 8 }}>Stock</th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((p) => (
+            <tr key={p.id}>
+              <td style={{ padding: 8 }}>{p.name}</td>
+              <td style={{ padding: 8, textAlign: "right" }}>
+                {typeof p.price === "number" ? p.price.toFixed(2) : p.price}
+              </td>
+              <td style={{ padding: 8, textAlign: "right" }}>{p.stock ?? "-"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
 }
-
-export default Products
