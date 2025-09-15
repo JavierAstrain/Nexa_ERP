@@ -1,10 +1,14 @@
 services:
   - type: web
-    name: nexa-erp-api
+    name: nexa-erp
     env: node
     plan: free
     buildCommand: |
-      cd backend
+      pnpm i --frozen-lockfile=false || npm i
+      cd frontend
+      pnpm i --frozen-lockfile=false || npm i
+      pnpm build || npm run build
+      cd ../backend
       pnpm i --frozen-lockfile=false || npm i
       pnpm prisma:generate || npx prisma generate
       pnpm build || npm run build
@@ -19,17 +23,6 @@ services:
           property: connectionString
       - key: JWT_SECRET
         generateValue: true
-
-  - type: static_site   # ⬅️ este es el nombre correcto
-    name: nexa-erp-frontend
-    buildCommand: |
-      cd frontend
-      pnpm i --frozen-lockfile=false || npm i
-      pnpm build || npm run build
-    staticPublishPath: frontend/dist
-    envVars:
-      - key: VITE_API_URL
-        value: https://nexa-erp-api.onrender.com  # luego cámbialo a la URL real de tu API
 
 databases:
   - name: nexa-erp-db
