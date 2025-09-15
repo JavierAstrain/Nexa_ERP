@@ -4,7 +4,6 @@ services:
     env: node
     plan: free
     buildCommand: |
-      pnpm i --frozen-lockfile=false || npm i
       cd frontend
       pnpm i --frozen-lockfile=false || npm i
       pnpm build || npm run build
