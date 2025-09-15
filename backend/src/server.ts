@@ -19,10 +19,10 @@ app.use(cors({ origin: allowedOrigin }));
 app.use(helmet());
 app.use(morgan('dev'));
 
-// Health check
+// Health
 app.get('/health', (_req, res) => res.json({ ok: true, name: 'NEXA ERP API' }));
 
-// API routes
+// API
 app.use('/auth', authRouter);
 app.use('/users', userRouter);
 app.use('/modules', modulesRouter);
@@ -30,26 +30,38 @@ app.use('/crm', crmRouter);
 app.use('/inventory', inventoryRouter);
 app.use('/accounting', accountingRouter);
 
-// ---- Servir frontend en producción ----
-const frontendPath = path.resolve(__dirname, '../../frontend/dist');
-if (fs.existsSync(frontendPath)) {
-  app.use(express.static(frontendPath));
-  // fallback SPA (sin pisar las rutas de API)
-  app.get('*', (req, res) => {
-    if (
-      req.path.startsWith('/auth') ||
-      req.path.startsWith('/users') ||
-      req.path.startsWith('/modules') ||
-      req.path.startsWith('/crm') ||
-      req.path.startsWith('/inventory') ||
-      req.path.startsWith('/accounting') ||
-      req.path.startsWith('/health')
-    ) {
-      return res.status(404).json({ error: 'Not Found' });
-    }
-    res.sendFile(path.join(frontendPath, 'index.html'));
-  });
-}
+// ==== FRONTEND STATIC (SPA) ====
+const candidates = [
+  path.resolve(__dirname, '../../frontend/dist'),     // /backend/dist -> /frontend/dist
+  path.resolve(__dirname, '../../../frontend/dist'),  // por si cambia la profundidad
+  path.resolve(process.cwd(), 'frontend/dist'),
+  path.resolve(process.cwd(), '../frontend/dist'),
+];
+
+const staticRoot = candidates.find(p => fs.existsSync(p)) ?? candidates[0];
+console.log('[NEXA] Serving frontend from:', staticRoot, 'exists:', fs.existsSync(staticRoot));
+
+app.use(express.static(staticRoot, { index: 'index.html' }));
+
+app.get('*', (req, res) => {
+  // No interceptar rutas de API
+  if (
+    req.path.startsWith('/auth') ||
+    req.path.startsWith('/users') ||
+    req.path.startsWith('/modules') ||
+    req.path.startsWith('/crm') ||
+    req.path.startsWith('/inventory') ||
+    req.path.startsWith('/accounting') ||
+    req.path.startsWith('/health')
+  ) {
+    return res.status(404).json({ error: 'Not Found' });
+  }
+
+  const indexPath = path.join(staticRoot, 'index.html');
+  if (fs.existsSync(indexPath)) {
+    return res.sendFile(indexPath);
+  }
+  return res.status(404).send('Frontend build not found');
+});
 
 export default app;
-
