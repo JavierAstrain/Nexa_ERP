@@ -1,13 +1,25 @@
-import React, { useEffect } from 'react';
-import { useAuth } from '../lib/api';
+import React, { useEffect } from "react";
+import { useAuth } from "../context/AuthContext";
 
 export default function Dashboard() {
-  const { modules, refreshModules } = useAuth();
-  useEffect(() => { refreshModules(); }, [refreshModules]);
+  const { token, modules, refreshModules } = useAuth();
+
+  useEffect(() => {
+    if (token) void refreshModules();
+  }, [token, refreshModules]);
+
   return (
-    <div style={{ padding: 24 }}>
-      <h1>NEXA ERP</h1>
-      <p>Módulos activos: {modules.join(', ') || 'ninguno'}</p>
+    <div>
+      <h1 className="text-2xl font-semibold mb-4">Dashboard</h1>
+      <div className="mb-4 text-sm text-gray-700">
+        Estado de sesión: <b>{token ? "Activa" : "Invitado"}</b>
+      </div>
+      <div className="mb-2 font-medium">Módulos disponibles:</div>
+      <ul className="list-disc list-inside">
+        {(modules ?? []).map((m: any, i: number) => (
+          <li key={i}>{typeof m === "string" ? m : m?.name ?? m?.key}</li>
+        ))}
+      </ul>
     </div>
   );
 }
