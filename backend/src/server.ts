@@ -8,6 +8,8 @@ import { modulesRouter } from './modules/modules.routes';
 import { crmRouter } from './modules/crm/crm.routes';
 import { inventoryRouter } from './modules/inventory/inventory.routes';
 import { accountingRouter } from './modules/accounting/accounting.routes';
+import * as path from 'path';
+import * as fs from 'fs';
 
 export const allowedOrigin = process.env.CORS_ORIGIN || '*';
 
@@ -20,7 +22,7 @@ app.use(morgan('dev'));
 // Health check
 app.get('/health', (_req, res) => res.json({ ok: true, name: 'NEXA ERP API' }));
 
-// Routes
+// API routes
 app.use('/auth', authRouter);
 app.use('/users', userRouter);
 app.use('/modules', modulesRouter);
@@ -28,20 +30,26 @@ app.use('/crm', crmRouter);
 app.use('/inventory', inventoryRouter);
 app.use('/accounting', accountingRouter);
 
-export default app;
-import * as path from 'path';
-import * as fs from 'fs';
-
-// --- Static frontend in production ---
+// ---- Servir frontend en producción ----
 const frontendPath = path.resolve(__dirname, '../../frontend/dist');
 if (fs.existsSync(frontendPath)) {
   app.use(express.static(frontendPath));
-  // Fallback to index.html for SPA routes
+  // fallback SPA (sin pisar las rutas de API)
   app.get('*', (req, res) => {
-    // Evitar interceptar llamadas a la API ya definidas
-    if (req.path.startsWith('/auth') || req.path.startsWith('/users') || req.path.startsWith('/modules') || req.path.startsWith('/crm') || req.path.startsWith('/inventory') || req.path.startsWith('/accounting') || req.path.startsWith('/health')) {
+    if (
+      req.path.startsWith('/auth') ||
+      req.path.startsWith('/users') ||
+      req.path.startsWith('/modules') ||
+      req.path.startsWith('/crm') ||
+      req.path.startsWith('/inventory') ||
+      req.path.startsWith('/accounting') ||
+      req.path.startsWith('/health')
+    ) {
       return res.status(404).json({ error: 'Not Found' });
     }
     res.sendFile(path.join(frontendPath, 'index.html'));
   });
 }
+
+export default app;
+
