@@ -20,7 +20,7 @@ services:
       - key: JWT_SECRET
         generateValue: true
 
-  - type: static
+  - type: static_site   # ⬅️ este es el nombre correcto
     name: nexa-erp-frontend
     buildCommand: |
       cd frontend
@@ -29,7 +29,7 @@ services:
     staticPublishPath: frontend/dist
     envVars:
       - key: VITE_API_URL
-        value: https://nexa-erp-api.onrender.com
+        value: https://nexa-erp-api.onrender.com  # luego cámbialo a la URL real de tu API
 
 databases:
   - name: nexa-erp-db
