@@ -9,7 +9,7 @@ import Products from './modules/inventory/Products'
 import Invoices from './modules/accounting/Invoices'
 import { ApiProvider, useAuth } from './lib/api'
 
-function PrivateRoute({ children }: { children: JSX.Element }) {
+function PrivateRoute({ children }: { children: React.ReactElement }) {
   const { token } = useAuth()
   if (!token) return <Navigate to="/login" replace />
   return children
