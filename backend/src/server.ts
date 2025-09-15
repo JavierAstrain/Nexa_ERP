@@ -1,57 +1,28 @@
-import express from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import morgan from 'morgan';
-import path from 'path';
-import fs from 'fs';
+import express from "express";
+import path from "path";
+import customersRouter from "./modules/customers";
+import productsRouter from "./modules/products";
+import invoicesRouter from "./modules/invoices";
 
-import { authRouter } from './modules/auth/auth.routes';
-import { userRouter } from './modules/users/user.routes';
-import { modulesRouter } from './modules/modules.routes';
-import { crmRouter } from './modules/crm/crm.routes';
-import { inventoryRouter } from './modules/inventory/inventory.routes';
-import { accountingRouter } from './modules/accounting/accounting.routes';
+export function createServer() {
+  const app = express();
+  app.use(express.json());
 
-export const allowedOrigin = process.env.CORS_ORIGIN || '*';
+  // API
+  app.get("/health", (_, res) => res.json({ ok: true }));
+  app.use("/api/customers", customersRouter);
+  app.use("/api/products", productsRouter);
+  app.use("/api/invoices", invoicesRouter);
 
-const app = express();
-app.use(express.json());
-app.use(cors({ origin: allowedOrigin }));
-app.use(helmet());
-app.use(morgan('dev'));
+  // FRONT estático (copiado a backend/public en el build)
+  const publicDir = path.join(__dirname, "../public");
+  console.log("[NEXA] Serving frontend from:", publicDir, "exists:", true);
+  app.use(express.static(publicDir));
 
-app.get('/health', (_req, res) => res.json({ ok: true, name: 'NEXA ERP API' }));
+  // SPA fallback
+  app.get("*", (_req, res) => {
+    res.sendFile(path.join(publicDir, "index.html"));
+  });
 
-app.use('/auth', authRouter);
-app.use('/users', userRouter);
-app.use('/modules', modulesRouter);
-app.use('/crm', crmRouter);
-app.use('/inventory', inventoryRouter);
-app.use('/accounting', accountingRouter);
-
-// === FRONTEND ===
-// Servimos SIEMPRE desde backend/public (copiado en build)
-const staticRoot = path.resolve(__dirname, '../public');
-console.log('[NEXA] Serving frontend from:', staticRoot, 'exists:', fs.existsSync(staticRoot));
-
-app.use(express.static(staticRoot, { index: 'index.html' }));
-
-app.get('*', (req, res) => {
-  // rutas de API => 404 json
-  if (
-    req.path.startsWith('/auth') ||
-    req.path.startsWith('/users') ||
-    req.path.startsWith('/modules') ||
-    req.path.startsWith('/crm') ||
-    req.path.startsWith('/inventory') ||
-    req.path.startsWith('/accounting') ||
-    req.path.startsWith('/health')
-  ) {
-    return res.status(404).json({ error: 'Not Found' });
-  }
-  const indexPath = path.join(staticRoot, 'index.html');
-  if (fs.existsSync(indexPath)) return res.sendFile(indexPath);
-  return res.status(404).send('Frontend build not found');
-});
-
-export default app;
+  return app;
+}
