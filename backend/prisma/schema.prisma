@@ -1,0 +1,128 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Tenant {
+  id        String   @id @default(cuid())
+  name      String
+  modules   ModuleToggle[]
+  users     User[]
+  customers Customer[]
+  products  Product[]
+  warehouses Warehouse[]
+  invoices  Invoice[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role     @default(USER)
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  tenantId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  USER
+}
+
+model ModuleToggle {
+  id        String   @id @default(cuid())
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  tenantId  String
+  moduleKey String
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tenantId, moduleKey])
+}
+
+model Customer {
+  id        String   @id @default(cuid())
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  tenantId  String
+  name      String
+  email     String?
+  phone     String?
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Product {
+  id        String   @id @default(cuid())
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  tenantId  String
+  sku       String   @unique
+  name      String
+  price     Decimal  @db.Numeric(12,2)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  stockItems StockItem[]
+}
+
+model Warehouse {
+  id        String   @id @default(cuid())
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  tenantId  String
+  name      String
+  location  String?
+  stock     StockItem[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model StockItem {
+  id          String    @id @default(cuid())
+  product     Product   @relation(fields: [productId], references: [id])
+  productId   String
+  warehouse   Warehouse @relation(fields: [warehouseId], references: [id])
+  warehouseId String
+  quantity    Int       @default(0)
+
+  @@unique([productId, warehouseId])
+}
+
+model Invoice {
+  id         String      @id @default(cuid())
+  tenant     Tenant      @relation(fields: [tenantId], references: [id])
+  tenantId   String
+  number     String      @unique
+  customer   Customer    @relation(fields: [customerId], references: [id])
+  customerId String
+  total      Decimal     @db.Numeric(12,2)
+  status     InvoiceStatus @default(DRAFT)
+  items      InvoiceItem[]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model InvoiceItem {
+  id        String   @id @default(cuid())
+  invoice   Invoice  @relation(fields: [invoiceId], references: [id])
+  invoiceId String
+  product   Product  @relation(fields: [productId], references: [id])
+  productId String
+  quantity  Int
+  price     Decimal  @db.Numeric(12,2)
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  CANCELLED
+}
