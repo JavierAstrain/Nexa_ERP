@@ -1,5 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
+import "./index.css";               // ⬅ importa Tailwind
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
@@ -20,9 +21,8 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
           <Route path="accounting/invoices" element={<Invoices />} />
         </Route>
         <Route path="/login" element={<Login />} />
-        <Route path="*" element={<div style={{ padding: 24 }}>404</div>} />
+        <Route path="*" element={<div className="p-6">404</div>} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>
 );
-
