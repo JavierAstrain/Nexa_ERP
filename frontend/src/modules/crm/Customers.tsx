@@ -1,68 +1,81 @@
-import React, { useEffect, useState } from 'react'
-import Layout from '../../components/Layout'
-import { useAuth } from '../../lib/api'
+import React, { useEffect, useState } from "react";
+import { useApi } from "../../lib/api";
 
-type Customer = { id:string, name:string, email?:string, phone?:string, notes?:string }
+type Customer = {
+  id: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  company?: string;
+};
 
-const Customers: React.FC = () => {
-  const { api } = useAuth()
-  const [list, setList] = useState<Customer[]>([])
-  const [form, setForm] = useState<Partial<Customer>>({})
+export default function Customers() {
+  const api = useApi();
+  const [rows, setRows] = useState<Customer[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const load = async ()=>{
-    const { data } = await api.get('/crm/customers')
-    setList(data)
-  }
-  useEffect(()=>{ load() }, [])
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data } = await api.get("/crm/customers");
+        const list: Customer[] = Array.isArray(data?.items)
+          ? data.items
+          : Array.isArray(data)
+          ? data
+          : [];
+        setRows(list);
+      } catch {
+        setRows([]);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [api]);
 
-  const save = async (e: React.FormEvent)=>{
-    e.preventDefault()
-    await api.post('/crm/customers', form)
-    setForm({})
-    load()
-  }
+  if (loading) return <div style={{ padding: 24 }}>Cargando clientes…</div>;
 
   return (
-    <Layout>
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold">Clientes</h2>
-      </div>
-      <div className="grid md:grid-cols-3 gap-6">
-        <div className="md:col-span-2">
-          <div className="card rounded-xl overflow-hidden">
-            <table className="w-full text-sm">
-              <thead className="bg-white/5">
-                <tr>
-                  <th className="text-left p-3">Nombre</th>
-                  <th className="text-left p-3">Email</th>
-                  <th className="text-left p-3">Teléfono</th>
-                </tr>
-              </thead>
-              <tbody>
-                {list.map(c=> (
-                  <tr key={c.id} className="border-t border-white/5">
-                    <td className="p-3">{c.name}</td>
-                    <td className="p-3">{c.email}</td>
-                    <td className="p-3">{c.phone}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-        <div className="card p-4 rounded-xl">
-          <h3 className="font-semibold mb-2">Nuevo cliente</h3>
-          <form className="space-y-2" onSubmit={save}>
-            <input className="input" placeholder="Nombre" value={form.name||''} onChange={e=>setForm({...form, name:e.target.value})}/>
-            <input className="input" placeholder="Email" value={form.email||''} onChange={e=>setForm({...form, email:e.target.value})}/>
-            <input className="input" placeholder="Teléfono" value={form.phone||''} onChange={e=>setForm({...form, phone:e.target.value})}/>
-            <textarea className="input" placeholder="Notas" value={form.notes||''} onChange={e=>setForm({...form, notes:e.target.value})}/>
-            <button className="btn w-full" type="submit">Guardar</button>
-          </form>
-        </div>
-      </div>
-    </Layout>
-  )
+    <div style={{ padding: 24 }}>
+      <h2 style={{ marginBottom: 12 }}>Clientes</h2>
+      <table style={{ width: "100%", borderCollapse: "collapse" }}>
+        <thead>
+          <tr>
+            <th style={th}>Nombre</th>
+            <th style={th}>Email</th>
+            <th style={th}>Teléfono</th>
+            <th style={th}>Empresa</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((c) => (
+            <tr key={c.id}>
+              <td style={td}>{c.name}</td>
+              <td style={td}>{c.email ?? "-"}</td>
+              <td style={td}>{c.phone ?? "-"}</td>
+              <td style={td}>{c.company ?? "-"}</td>
+            </tr>
+          ))}
+          {rows.length === 0 && (
+            <tr>
+              <td style={td} colSpan={4}>
+                Sin registros
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
 }
 
-export default Customers
+const th: React.CSSProperties = {
+  textAlign: "left",
+  fontWeight: 600,
+  borderBottom: "1px solid #eee",
+  padding: 8,
+};
+
+const td: React.CSSProperties = {
+  borderBottom: "1px solid #f3f3f3",
+  padding: 8,
+};
