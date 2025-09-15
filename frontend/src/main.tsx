@@ -20,11 +20,11 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <ApiProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/login" element={<Login/>} />
-          <Route path="/" element={<PrivateRoute><Dashboard/></PrivateRoute>} />
-          <Route path="/crm/customers" element={<PrivateRoute><Customers/></PrivateRoute>} />
-          <Route path="/inventory/products" element={<PrivateRoute><Products/></PrivateRoute>} />
-          <Route path="/accounting/invoices" element={<PrivateRoute><Invoices/></PrivateRoute>} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+          <Route path="/crm/customers" element={<PrivateRoute><Customers /></PrivateRoute>} />
+          <Route path="/inventory/products" element={<PrivateRoute><Products /></PrivateRoute>} />
+          <Route path="/accounting/invoices" element={<PrivateRoute><Invoices /></PrivateRoute>} />
         </Routes>
       </BrowserRouter>
     </ApiProvider>
