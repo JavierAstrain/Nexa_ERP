@@ -17,7 +17,6 @@ export default function Products() {
     (async () => {
       try {
         const { data } = await api.get("/inventory/products");
-        // admitir distintos formatos de respuesta
         const list: Product[] = Array.isArray(data?.items) ? data.items : Array.isArray(data) ? data : [];
         setItems(list);
       } catch {
