@@ -29,3 +29,19 @@ app.use('/inventory', inventoryRouter);
 app.use('/accounting', accountingRouter);
 
 export default app;
+import path from 'path';
+import fs from 'fs';
+
+// --- Static frontend in production ---
+const frontendPath = path.resolve(__dirname, '../../frontend/dist');
+if (fs.existsSync(frontendPath)) {
+  app.use(express.static(frontendPath));
+  // Fallback to index.html for SPA routes
+  app.get('*', (req, res) => {
+    // Evitar interceptar llamadas a la API ya definidas
+    if (req.path.startsWith('/auth') || req.path.startsWith('/users') || req.path.startsWith('/modules') || req.path.startsWith('/crm') || req.path.startsWith('/inventory') || req.path.startsWith('/accounting') || req.path.startsWith('/health')) {
+      return res.status(404).json({ error: 'Not Found' });
+    }
+    res.sendFile(path.join(frontendPath, 'index.html'));
+  });
+}
