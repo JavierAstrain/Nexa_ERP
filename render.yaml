@@ -12,6 +12,14 @@ services:
       pnpm prisma:generate || npx prisma generate
       pnpm build || npm run build
     startCommand: |
+      # arrancamos desde la raíz del repo
+      if [ ! -d "./frontend/dist" ] && [ -d "./frontend" ]; then
+        echo "Frontend dist not found. Building at runtime..."
+        cd frontend
+        pnpm i --frozen-lockfile=false || npm i
+        pnpm build || npm run build
+        cd ..
+      fi
       cd backend
       pnpm prisma:generate || npx prisma generate
       pnpm db:push || npx prisma db push
