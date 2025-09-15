@@ -29,8 +29,8 @@ app.use('/inventory', inventoryRouter);
 app.use('/accounting', accountingRouter);
 
 export default app;
-import path from 'path';
-import fs from 'fs';
+import * as path from 'path';
+import * as fs from 'fs';
 
 // --- Static frontend in production ---
 const frontendPath = path.resolve(__dirname, '../../frontend/dist');
