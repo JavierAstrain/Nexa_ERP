@@ -1,19 +1,21 @@
-import React from 'react';
-import { useAuth } from '../lib/api';
-import { Link, Outlet } from 'react-router-dom';
+import React from "react";
+import { Link, Outlet } from "react-router-dom";
 
 export default function Layout() {
-  const { logout, modules } = useAuth();
   return (
-    <div>
-      <nav style={{ display: 'flex', gap: 12, padding: 12, borderBottom: '1px solid #eee' }}>
-        <Link to="/">Dashboard</Link>
-        {modules.includes('crm') && <Link to="/customers">Clientes</Link>}
-        {modules.includes('inventory') && <Link to="/products">Productos</Link>}
-        {modules.includes('accounting') && <Link to="/invoices">Facturación</Link>}
-        <button onClick={logout} style={{ marginLeft: 'auto' }}>Salir</button>
-      </nav>
-      <Outlet />
+    <div style={{ fontFamily: "Inter, system-ui, Avenir, Helvetica, Arial, sans-serif" }}>
+      <header style={{ padding: 16, borderBottom: "1px solid #eee", display: "flex", gap: 12 }}>
+        <strong>NEXA ERP</strong>
+        <nav style={{ display: "flex", gap: 12 }}>
+          <Link to="/dashboard">Dashboard</Link>
+          <Link to="/crm/customers">Clientes</Link>
+          <Link to="/inventory/products">Productos</Link>
+          <Link to="/accounting/invoices">Facturas</Link>
+        </nav>
+      </header>
+      <main>
+        <Outlet />
+      </main>
     </div>
   );
 }
