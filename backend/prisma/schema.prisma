@@ -116,4 +116,8 @@ model InvoiceItem {
   id        String   @id @default(cuid())
   invoice   Invoice  @relation(fields: [invoiceId], references: [id])
   invoiceId String
-  product   Product  @relati
+  product   Product  @relation(fields: [productId], references: [id])
+  productId String
+  quantity  Int
+  price     Decimal  @db.Decimal(12, 2)
+}
